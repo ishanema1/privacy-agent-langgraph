@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Assessment Agent — LangGraph Rebuild</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blueprint: #0F3357;
+    --blueprint-2: #133F68;
+    --line: #7FA8CC;
+    --line-bright: #BFDCF5;
+    --paper: #EAF2F8;
+    --verified: #6FCF97;
+    --unverified: #E0A458;
+    --border: rgba(191,220,245,0.22);
+    --font-display: 'Archivo', sans-serif;
+    --font-body: 'IBM Plex Sans', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:
+      linear-gradient(var(--blueprint), var(--blueprint)),
+      repeating-linear-gradient(0deg, rgba(191,220,245,0.05) 0 1px, transparent 1px 28px),
+      repeating-linear-gradient(90deg, rgba(191,220,245,0.05) 0 1px, transparent 1px 28px);
+    color:var(--paper);
+    font-family:var(--font-body);
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:920px; margin:0 auto; padding:0 24px;}
+
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--line-bright);
+  }
+
+  header.top{padding:44px 0 0;}
+  header.top .wrap{display:flex; justify-content:space-between; align-items:center;}
+  .brand{font-family:var(--font-mono); font-size:12.5px; color:var(--line);}
+
+  .hero{padding:50px 0 20px;}
+  .hero h1{
+    font-family:var(--font-display);
+    font-weight:800;
+    font-size:clamp(28px, 4.6vw, 44px);
+    line-height:1.15;
+    letter-spacing:-0.01em;
+    margin:16px 0 16px;
+    max-width:700px;
+  }
+  .hero h1 .accent{ color: var(--line-bright); }
+  .hero p.lede{ color: var(--line-bright); opacity:0.85; font-size:16.5px; max-width:600px; margin-bottom:8px; }
+
+  /* Schematic diagram */
+  .schematic{
+    margin:44px 0 8px;
+    background:var(--blueprint-2);
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:32px 26px;
+  }
+  .schematic-label{
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--line);
+    margin-bottom:20px;
+  }
+  .flow-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:14px;
+  }
+  .node{
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    color:var(--paper);
+    border:1.5px solid var(--line-bright);
+    border-radius:3px;
+    padding:9px 14px;
+    background:rgba(191,220,245,0.06);
+    position:relative;
+  }
+  .node.terminal{ border-style:dashed; color:var(--line-bright); }
+  .arrow{ color:var(--line); font-family:var(--font-mono); font-size:14px; }
+  .branch{
+    margin-left:32px;
+    padding-left:16px;
+    border-left:1.5px dashed var(--line);
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .branch .flow-row{ margin-bottom:0; }
+  .branch-label{ font-family:var(--font-mono); font-size:11px; color:var(--unverified); min-width:150px; }
+
+  section{padding:50px 0;}
+  section.divider{border-top:1px solid var(--border);}
+  h2{
+    font-family:var(--font-display);
+    font-size:24px;
+    font-weight:700;
+    margin-bottom:16px;
+    color:var(--paper);
+  }
+  p.lead-text{ font-size:15px; color:var(--line-bright); opacity:0.9; max-width:660px; }
+
+  /* Verification stamp panel — the signature element */
+  .verify-panel{
+    margin-top:26px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+  }
+  .verify-card{
+    border-radius:6px;
+    padding:20px;
+    border:1.5px solid;
+  }
+  .verify-card.tested{ border-color: var(--verified); background: rgba(111,207,151,0.07); }
+  .verify-card.untested{ border-color: var(--unverified); background: rgba(224,164,88,0.07); }
+  .verify-card .stamp-label{
+    font-family:var(--font-mono);
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    margin-bottom:12px;
+  }
+  .verify-card.tested .stamp-label{ color:var(--verified); }
+  .verify-card.untested .stamp-label{ color:var(--unverified); }
+  .verify-card ul{ margin:0; padding-left:18px; font-size:13.5px; color:var(--paper); opacity:0.9; }
+  .verify-card li{ margin-bottom:6px; }
+  .verify-card p.note{ font-size:12.5px; color:var(--line-bright); opacity:0.8; margin-top:10px; font-style:italic; }
+
+  .flow-list{margin-top:20px; display:flex; flex-direction:column;}
+  .flow-item{
+    display:grid;
+    grid-template-columns:100px 1fr;
+    gap:16px;
+    padding:16px 0;
+    border-bottom:1px solid var(--border);
+  }
+  .flow-item:last-child{border-bottom:none;}
+  .flow-tag{
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--line-bright);
+    align-self:start;
+    padding-top:2px;
+  }
+  .flow-item h3{ font-family:var(--font-display); font-size:15.5px; margin-bottom:4px; color:var(--paper); }
+  .flow-item p{ color:var(--line-bright); opacity:0.85; font-size:13.5px; }
+
+  .badges{display:flex; flex-wrap:wrap; gap:9px; margin-top:18px;}
+  .badge{
+    font-family:var(--font-mono);
+    font-size:12px;
+    padding:6px 12px;
+    border:1px solid var(--border);
+    border-radius:3px;
+    color:var(--line-bright);
+    background:var(--blueprint-2);
+  }
+
+  .command-block{
+    margin-top:18px;
+    background:var(--blueprint-2);
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:16px 18px;
+    font-family:var(--font-mono);
+    font-size:13px;
+    color:var(--verified);
+    line-height:1.9;
+  }
+  .command-block .comment{ color:var(--line); }
+
+  footer{
+    border-top:1px solid var(--border);
+    padding:36px 0 56px;
+    color:var(--line);
+    font-size:12.8px;
+  }
+  footer .wrap{display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;}
+  footer a{ color:var(--line-bright); text-decoration:none; }
+  footer a:hover{ text-decoration:underline; }
+
+  @media (max-width:640px){
+    .verify-panel{ grid-template-columns:1fr; }
+    .branch{ margin-left:12px; }
+    .flow-item{ grid-template-columns:1fr; gap:6px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <span class="brand">ISHA NEMA</span>
+    <span class="brand">Lead AI/ML Engineer</span>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <span class="eyebrow">Case study · Same agent, new framework</span>
+    <h1>The same agent, redrawn as a <span class="accent">state graph</span>.</h1>
+    <p class="lede">A companion rebuild of the privacy-assessment agent — this time on LangGraph instead of a hand-rolled loop — with an honest account of exactly what was verified before publishing.</p>
+
+    <div class="schematic">
+      <div class="schematic-label">// graph structure — langgraph_agent.py</div>
+
+      <div class="flow-row">
+        <span class="node terminal">START</span>
+        <span class="arrow">→</span>
+        <span class="node">agent</span>
+      </div>
+      <div class="branch">
+        <div class="flow-row"><span class="branch-label">tool call</span><span class="arrow">→</span><span class="node">tools</span><span class="arrow">→</span><span class="node">agent</span><span class="arrow">(loop)</span></div>
+        <div class="flow-row"><span class="branch-label">submit_privacy_assessment</span><span class="arrow">→</span><span class="node">finalize</span><span class="arrow">→</span><span class="node terminal">END</span></div>
+        <div class="flow-row"><span class="branch-label">no tool call</span><span class="arrow">→</span><span class="node terminal">END</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="divider">
+  <div class="wrap">
+    <h2>Why this exists</h2>
+    <p class="lead-text">The original agent is implemented directly against the tool-use wire API on purpose — a stronger demonstration of understanding what a framework like LangGraph does underneath than importing it outright. This repo is the natural follow-up: the same agent, same tool contracts, same tests it can borrow — rebuilt on the actual framework, so both "understands the mechanics" and "fluent in the framework" are backed by real code.</p>
+  </div>
+</section>
+
+<section class="divider">
+  <div class="wrap">
+    <h2>What was verified, and how</h2>
+    <p class="lead-text">This was originally built without PyPI access to install <code style="font-family:var(--font-mono); background:var(--blueprint-2); padding:1px 5px; border-radius:3px;">langgraph</code> itself. Rather than quietly ship untested graph-wiring code, here's exactly how the gap was closed.</p>
+
+    <div class="verify-panel">
+      <div class="verify-card tested">
+        <span class="stamp-label">✓ Verified without the package — 8 tests</span>
+        <ul>
+          <li><code>agent_node</code>, <code>should_continue</code>, <code>tools_node</code>, <code>finalize_node</code> — plain functions, no LangGraph import</li>
+          <li>A full manual walkthrough composing all four in sequence, asserting the trace matches the hand-rolled agent exactly</li>
+          <li>The deterministic risk-level guarantee, re-verified on this third runner</li>
+        </ul>
+      </div>
+      <div class="verify-card tested">
+        <span class="stamp-label">✓ Verified on real LangGraph — 9/9 passing</span>
+        <ul>
+          <li><code>build_graph()</code> and <code>run_agent()</code> — confirmed on <code>langgraph</code>, pytest 8.1.2, Python 3.11.9</li>
+          <li><code>python langgraph_agent.py</code> runs end-to-end, producing a trace and draft identical to the pre-verified manual walkthrough</li>
+          <li>Along the way, verification surfaced a real bug: an optional <code>xgboost</code> import only caught <code>ImportError</code>, not the <code>AttributeError</code> a real setuptools/xgboost version mismatch throws — fixed and confirmed</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="divider">
+  <div class="wrap">
+    <h2>What verifying it actually found</h2>
+    <p class="lead-text">The value of running this for real rather than trusting the manual walkthrough: it surfaced a genuine bug. <code style="font-family:var(--font-mono); background:var(--blueprint-2); padding:1px 5px; border-radius:3px;">attacker_model.py</code>'s optional XGBoost import only handled <code style="font-family:var(--font-mono); background:var(--blueprint-2); padding:1px 5px; border-radius:3px;">ImportError</code> — on a real machine with a version mismatch between an older xgboost and newer setuptools, the import raised <code style="font-family:var(--font-mono); background:var(--blueprint-2); padding:1px 5px; border-radius:3px;">AttributeError</code> instead, which crashed the whole module rather than triggering the scikit-learn fallback it was supposed to. "Optional dependency" fallback logic needs to anticipate more than just "not installed" — a lesson that only shows up by actually running code somewhere other than the environment it was written in.</p>
+
+<section class="divider">
+  <div class="wrap">
+    <h2>What's reused, not reimplemented</h2>
+    <div class="flow-list">
+      <div class="flow-item">
+        <span class="flow-tag">TOOL_SCHEMAS</span>
+        <div><h3>Same tool contracts</h3><p>Imported from the original repo's <code style="font-family:var(--font-mono);">agent.py</code> rather than redefined a third time — one source of truth for what each tool does, regardless of which runner calls it.</p></div>
+      </div>
+      <div class="flow-item">
+        <span class="flow-tag">dispatch_tool</span>
+        <div><h3>Same execution logic</h3><p>The functions that actually call Confluence, the vector store, and the attacker model are unchanged — this rebuild only changes how the control flow is expressed.</p></div>
+      </div>
+      <div class="flow-item">
+        <span class="flow-tag">ScriptedMockAgentClient</span>
+        <div><h3>Same offline demo behavior</h3><p>The same scripted mock model drives both the hand-rolled agent and this graph — so their outputs are directly comparable, not just superficially similar.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="divider">
+  <div class="wrap">
+    <h2>Run it</h2>
+    <div class="command-block">
+      <span class="comment"># includes langgraph</span><br>
+      pip install -r requirements.txt<br>
+      <span class="comment"># 9 tests — 8 run anywhere, 1 requires langgraph installed</span><br>
+      python -m pytest test_langgraph_agent.py -v<br>
+      python langgraph_agent.py
+    </div>
+
+    <div class="badges" style="margin-top:24px;">
+      <span class="badge">Python</span>
+      <span class="badge">LangGraph</span>
+      <span class="badge">Reused Anthropic tool-use contracts</span>
+      <span class="badge">pytest</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>Isha Nema — Lead AI/ML Engineer</span>
+    <span><a href="https://www.linkedin.com/in/isha-nema" target="_blank">LinkedIn</a> &nbsp;·&nbsp; <a href="https://github.com/ishanema1" target="_blank">GitHub</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
